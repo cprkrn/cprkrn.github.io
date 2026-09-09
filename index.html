@@ -447,7 +447,14 @@ function frame(now){
 }
 
 let rzT = 0;
-addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { resize(); buildTree(t); }, 180); });
+function onResize(){
+  // iOS Safari fires resize when the URL bar collapses; only rebuild the tree for real layout changes
+  const wChanged = innerWidth !== W, hBig = Math.abs(innerHeight - H) > H*0.25;
+  resize();
+  if (wChanged || hBig) buildTree(t);
+  else { rootY = H + 2; crownY = rootY - trunk*2.6; }
+}
+addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(onResize, 180); });
 document.addEventListener('visibilitychange', () => { document.title = document.hidden ? 'the birds are still here.' : 'cprkrn'; if (!document.hidden) last = performance.now(); });
 
 resize(); buildTree(0);
