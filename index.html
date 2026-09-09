@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>cprkrn</title>
+<meta name="description" content="a tree, some birds.">
+<meta name="theme-color" content="#f3efe6">
+<meta property="og:title" content="cprkrn">
+<meta property="og:description" content="a tree, some birds.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='2' width='12' height='12' fill='none' stroke='%232340ff' stroke-width='1.5'/%3E%3C/svg%3E">
+<style>
+:root{
+  --paper:#f3efe6; --black:#060606; --dark:0; --wind:.5;
+  --hw:608px; --hp:0; --hs:1;
+  --bg: color-mix(in oklab, var(--paper), var(--black) calc(var(--dark) * 100%));
+  --ink: color-mix(in oklab, #131313, var(--paper) calc(var(--dark) * 100%));
+  --blue: color-mix(in oklab, #2340ff, #8593ff calc(var(--dark) * 40%));
+}
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:"Times New Roman",Times,Georgia,serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--blue);color:#fff}
+a{color:inherit}
+#sky{position:fixed;inset:0;width:100%;height:100%;mix-blend-mode:difference;pointer-events:none;z-index:5}
+main{position:relative;z-index:2}
+section{position:relative}
+.mono{font-family:"Courier New",Courier,monospace}
+s{text-decoration-thickness:1.4px}
+sup{font-size:.62em;line-height:0;vertical-align:baseline;position:relative;top:-.6em;margin-left:.06em}
+
+/* 0 — threshold */
+#threshold{height:100vh;display:grid;place-items:start center;padding-top:26vh;text-align:center}
+#threshold .thr{opacity:0;animation:fade 2.6s ease .9s forwards;font-size:.95rem;letter-spacing:.02em;margin:0}
+#threshold .hint{position:absolute;bottom:2rem;left:50%;translate:-50% 0;opacity:0;animation:fade 3s ease 7.5s forwards;font-size:.8rem}
+@keyframes fade{to{opacity:1}}
+
+/* I — the lane */
+#lane{min-height:100vh;padding:7vh 6vw 14vh;max-width:46rem;margin:0 auto}
+#lane .num{display:block;text-align:center;font-size:1.05rem;letter-spacing:.35em;margin:0 0 3rem}
+#lane .z{font-size:clamp(1.15rem,2.2vw,1.45rem);line-height:1.78;margin:0;transform:skewX(calc((var(--wind) - .5) * 1.7deg));transform-origin:50% 100%}
+.fns{margin:6.5rem 0 0;padding:0;font-size:.8rem;line-height:1.55;max-width:34rem}
+.fns li{list-style:none;margin:1rem 0;display:grid;grid-template-columns:1.4em 1fr;gap:0 .3em}
+.fns li::before{content:attr(data-n)}
+.ed{opacity:.72}
+
+/* II — the hallway */
+#hallway{height:480vh}
+.stick{position:sticky;top:0;height:100vh;overflow:hidden}
+.hall{position:absolute;left:50%;top:50%;translate:-50% -50%;scale:var(--hs);width:var(--hw);max-width:calc(100vw - 2.5rem);
+  font-size:clamp(1.05rem,1.9vw,1.35rem);line-height:1.8;text-align:center;margin:0;
+  word-spacing:calc(var(--hp) * 1.7em);letter-spacing:calc(var(--hp) * .18em)}
+.fn{position:absolute;font-size:.76rem;line-height:1.5;opacity:0;max-width:15rem;margin:0}
+.fn-r{right:1.4rem;top:50%;translate:0 -50%;writing-mode:vertical-rl}
+.fn-l{left:1.4rem;top:20%;rotate:180deg}
+.fn-b{left:50%;bottom:1.6rem;translate:-50% 0;scale:-1 1;white-space:nowrap;max-width:none}
+@media (max-width:640px){.fn-r,.fn-l{display:none}.fn-b{font-size:.68rem}}
+
+/* III — the box */
+#box{min-height:100vh;display:grid;place-items:center end;padding:10vh 7vw}
+@media (max-width:640px){#box{place-items:start center;padding:7vh 1.5rem}}
+.boxwrap{position:relative}
+.bluebox{position:relative;border:1px solid var(--blue);color:var(--blue);padding:1.5rem 1.8rem;width:min(23rem,86vw);font-size:.86rem;line-height:1.75;background:transparent}
+.bluebox.ghost{position:absolute;inset:0;translate:7px 9px;scale:-1 1;opacity:.2;filter:blur(.4px);pointer-events:none;user-select:none}
+.bluebox .cap{margin:0 0 .5rem;font-style:italic}
+.bluebox ul{list-style:none;margin:0;padding:0}
+.bluebox li{display:flex;justify-content:space-between;gap:1.2rem}
+.bluebox a{color:inherit;text-decoration:none;border-bottom:1px solid color-mix(in oklab,var(--blue),transparent 65%)}
+.bluebox a:hover{border-bottom-color:var(--blue)}
+.bluebox .r{opacity:.7;text-align:right}
+
+/* IV — the dark */
+#dark{height:240vh}
+.meas{position:absolute;left:1.6rem;bottom:1.6rem;font-size:.76rem;line-height:1.55;opacity:0;margin:0}
+.end{position:absolute;right:1.6rem;bottom:1.6rem;text-align:right;font-size:.78rem;line-height:1.6;opacity:0;margin:0}
+@media (max-width:640px){.meas{bottom:5rem}}
+@media (prefers-reduced-motion:reduce){#threshold .thr,#threshold .hint{animation-duration:.01s}}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<main>
+
+<section id="threshold">
+  <p class="mono thr">cprkrn</p>
+  <span class="mono hint" aria-hidden="true">↓</span>
+</section>
+
+<section id="lane">
+  <span class="num">I</span>
+  <p class="z">Cooper Kernan<sup>1</sup> builds small machines that talk to money<sup>2</sup> and to music.<sup>3</sup> He is usually somewhere between a city and a mountain.<sup>4</sup> The tree was here first.<sup>5</sup></p>
+  <ol class="fns mono">
+    <li data-n="1"><span>cprkrn. the vowels left first. what stayed is at <a href="https://github.com/cprkrn">github.com/cprkrn</a>.</span></li>
+    <li data-n="2"><span>Cashew, which lets you text your money. a few agents that watch markets and have learned, mostly, to keep their hands in their pockets.</span></li>
+    <li data-n="3"><span>a crate toolkit that turns playlists into records. a small thing that moves them between places that don't talk to each other.</span></li>
+    <li data-n="4"><span>see 6.</span></li>
+  </ol>
+</section>
+
+<section id="hallway">
+  <div class="stick">
+    <p class="hall">every letter on this page is a leaf, and when the wind picks up a few of them let go and come back as birds, and if you move fast enough through the crown, you are the wind.</p>
+    <p class="fn fn-r mono" id="fn5">5&nbsp;&nbsp;they come back. usually.</p>
+    <p class="fn fn-l mono" id="fn6">6&nbsp;&nbsp;the mountain is not specified. the city is not specified. this is on purpose.</p>
+    <p class="fn fn-b mono" id="fn7">7&nbsp;&nbsp;none of it is finished. that seems to be the point.</p>
+  </div>
+</section>
+
+<section id="box">
+  <div class="boxwrap">
+    <div class="bluebox mono ghost" aria-hidden="true">
+      <p class="cap">elsewhere</p>
+      <ul>
+        <li><span>github</span><span class="r">cprkrn</span></li>
+        <li><span>cashew</span><span class="r">text your money</span></li>
+        <li><span>crate-toolkit</span><span class="r">records</span></li>
+        <li><span>spopify</span><span class="r">playlists</span></li>
+        <li><span>the tree</span><span class="r">↑</span></li>
+      </ul>
+    </div>
+    <div class="bluebox mono">
+      <p class="cap">elsewhere</p>
+      <ul>
+        <li><a href="https://github.com/cprkrn">github</a><span class="r">cprkrn</span></li>
+        <li><span>cashew</span><span class="r">text your money</span></li>
+        <li><a href="https://github.com/cprkrn/crate-toolkit">crate-toolkit</a><span class="r">records</span></li>
+        <li><a href="https://github.com/cprkrn/spopify">spopify</a><span class="r">playlists</span></li>
+        <li><a href="#threshold">the tree</a><span class="r">↑</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="dark">
+  <div class="stick">
+    <p class="mono meas" id="meas">8&nbsp;&nbsp;letters on the tree&nbsp;&nbsp;<span id="mo">0</span><br>&nbsp;&nbsp;&nbsp;in the air&nbsp;&nbsp;<span id="mi">0</span><br>&nbsp;&nbsp;&nbsp;the wind&nbsp;&nbsp;<span id="mw">0</span></p>
+    <p class="mono end" id="end">cprkrn<br>2026</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+(() => {
+'use strict';
+const cv = document.getElementById('sky'), ctx = cv.getContext('2d');
+const root = document.documentElement;
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const PI = Math.PI, TAU = PI * 2;
+const clamp = (v,a,b) => v<a?a:v>b?b:v, lerp = (a,b,t) => a+(b-a)*t;
+const smooth = (a,b,x) => { const t = clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
+const bell = (a,b,x) => { const t = clamp((x-a)/(b-a),0,1); return Math.sin(t*PI); };
+const easeOut = t => 1 - Math.pow(1-t, 3);
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+const TEXT = 'cooper kernan builds small machines that talk to money and to music he is usually somewhere between a city and a mountain the tree was here first every letter on this page is a leaf and when the wind picks up a few of them let go and come back as birds';
+const GLYPHS = TEXT.replace(/\s+/g,'').split('');
+
+let W=0, H=0, DPR=1, small=false;
+let segs=[], byDepth=[], slots=[], parts=[];
+let rootX=0, rootY=0, crownY=0, trunk=0;
+const MAXD = 8;
+let airborne = 0;
+let shift = 0, shiftT = 0;
+let grownOnce = false;
+
+function buildTree(t){
+  segs=[]; byDepth=[]; slots=[]; parts=[]; airborne=0;
+  const rng = mulberry32(2026);
+  small = W < 640;
+  rootX = W*0.5; rootY = H + 2;
+  trunk = H * (small ? 0.17 : 0.2);
+  crownY = rootY - trunk*2.6;
+  const T0 = (RM || grownOnce) ? t - 100 : t + 0.9;
+  function add(p, ang, len, w, depth, t0){
+    const dur = 0.5 + (len/trunk)*1.1;
+    segs.push({p,ang,len,w,depth,phase:rng()*TAU,t0,dur,ax:0,ay:0,bx:0,by:0,abs:0,grown:0});
+    return segs.length-1;
+  }
+  function build(p, ang, depth, len, w, t0){
+    const i = add(p, ang, len, w, depth, t0);
+    if (depth >= MAXD || len < 4) return;
+    const tNext = t0 + segs[i].dur*0.7;
+    const spread = 0.34 + depth*0.03 + rng()*0.24;
+    const shrink = 0.74 + rng()*0.1;
+    const kids = [];
+    if (depth >= 4 && rng() < 0.3) kids.push((rng()<.5?-1:1)*spread*(0.8+rng()*0.5));
+    else kids.push(-spread*(0.8+rng()*0.5), spread*(0.8+rng()*0.5));
+    if (depth < 2 || rng() < 0.18) kids.push((rng()-0.5)*0.22);
+    for (const a of kids){
+      const leader = Math.abs(a) < 0.2;
+      build(i, a, depth+1, len*shrink*(leader?0.96:0.86), w*0.64, tNext + rng()*0.3);
+    }
+  }
+  build(-1, -PI/2, 0, trunk, small ? 9 : 15, T0);
+  for (let d=0; d<=MAXD; d++) byDepth.push([]);
+  for (let i=0;i<segs.length;i++) byDepth[segs[i].depth].push(i);
+
+  const cand = [];
+  for (let i=0;i<segs.length;i++){ const s=segs[i];
+    if (s.depth >= MAXD-2){ cand.push({seg:i,f:1,side:(i&1)?1:-1}); if (s.depth >= MAXD-1) cand.push({seg:i,f:0.55,side:(i&1)?-1:1}); } }
+  for (let i=cand.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [cand[i],cand[j]]=[cand[j],cand[i]]; }
+  const N = Math.min(cand.length, small ? 170 : 340);
+  for (let i=0;i<N;i++){ const c=cand[i]; c.owner=i; slots.push(c);
+    parts.push({slot:i, st:'leaf', x:0,y:0,vx:0,vy:0, ang:0, head:0, m:0, g:0,
+      ch:GLYPHS[i%GLYPHS.length], size:(small?10:11.5)+rng()*4, fp:rng()*TAU, ff:9+rng()*5,
+      timer:0, spin:0, glide:0, wa:0, tgt:-1}); }
+}
+
+function resize(){
+  DPR = Math.min(2, devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+
+/* wind */
+let gustT=0, gustNext=4+Math.random()*6, gustA=0, mouseGust=0;
+function windAt(t, dt){
+  const base = 0.45 + 0.25*Math.sin(t*0.21) + 0.18*Math.sin(t*0.53+1.3) + 0.10*Math.sin(t*1.31);
+  gustNext -= dt;
+  if (gustNext <= 0){ gustT = 2.2; gustA = 0.45+Math.random()*0.5; gustNext = 6+Math.random()*10; }
+  let g = 0; if (gustT > 0){ g = gustA*Math.sin(PI*(1-gustT/2.2)); gustT -= dt; }
+  mouseGust *= Math.pow(0.04, dt);
+  return clamp(base + g + mouseGust*0.9, 0, 1.6);
+}
+
+/* pointer */
+let mx=-9999, my=-9999, lmx=0, lmy=0, lmt=0;
+function onMove(x,y){
+  const now = performance.now();
+  if (lmt){ const dt = Math.max(8, now-lmt); const sp = Math.hypot(x-lmx, y-lmy)/dt*1000; mouseGust = Math.min(1, mouseGust + sp/2600); }
+  lmx=x; lmy=y; lmt=now; mx=x; my=y;
+}
+addEventListener('pointermove', e => onMove(e.clientX, e.clientY), {passive:true});
+addEventListener('touchmove', e => { const t=e.touches[0]; if(t) onMove(t.clientX, t.clientY); }, {passive:true});
+addEventListener('pointerleave', () => { mx=my=-9999; });
+
+/* tree */
+function updateTree(t, wind, dt){
+  shift += (shiftT - shift)*Math.min(1, dt*3);
+  rootX = W*0.5 + shift;
+  for (let i=0;i<segs.length;i++){
+    const s = segs[i]; let x0,y0,pa;
+    if (s.p < 0){ x0=rootX; y0=rootY; pa=0; } else { const P=segs[s.p]; x0=P.bx; y0=P.by; pa=P.abs; }
+    const g = RM ? 1 : easeOut(clamp((t-s.t0)/s.dur, 0, 1)); s.grown = g;
+    const d = s.depth;
+    const sway = wind*(0.0055*d*d + 0.004*d)*(0.6*Math.sin(t*1.9+s.phase) + 0.4*Math.sin(t*0.7+s.phase*1.3)) + wind*0.011*d;
+    let a = pa + s.ang + sway;
+    if (s.p >= 0) a += (-PI/2 - a)*0.03;
+    const L = s.len*g;
+    s.abs=a; s.ax=x0; s.ay=y0; s.bx=x0+Math.cos(a)*L; s.by=y0+Math.sin(a)*L;
+  }
+}
+function drawTree(){
+  ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (let d=0; d<byDepth.length; d++){
+    const ids = byDepth[d]; if (!ids.length) continue;
+    ctx.lineWidth = Math.max(0.7, segs[ids[0]].w);
+    ctx.beginPath();
+    for (const i of ids){ const s=segs[i]; if (s.grown <= 0) continue; ctx.moveTo(s.ax,s.ay); ctx.lineTo(s.bx,s.by); }
+    ctx.stroke();
+  }
+}
+
+/* leaves ↔ birds */
+function slotPos(sl){ const s=segs[sl.seg]; return [lerp(s.ax,s.bx,sl.f), lerp(s.ay,s.by,sl.f), s.abs + sl.side*0.75, s.grown]; }
+function release(p, wind){
+  slots[p.slot].owner = -1; p.slot = -1; p.st = 'fall';
+  p.timer = 0.45 + Math.random()*0.7;
+  p.vx = wind*50 + (Math.random()-.5)*50; p.vy = -15; p.spin = (Math.random()-.5)*12;
+  airborne++;
+}
+function attach(p, idx, si){
+  slots[si].owner = idx; p.slot = si; p.st = 'leaf'; p.m = 1; p.tgt = -1; airborne--;
+}
+function freeSlot(p){
+  // nearest of a few random free slots
+  let best=-1, bd=1e9;
+  for (let k=0;k<14;k++){ const si = (Math.random()*slots.length)|0; const sl = slots[si];
+    if (sl.owner !== -1 || segs[sl.seg].grown < 0.98) continue;
+    const [x,y] = slotPos(sl); const d = (x-p.x)*(x-p.x)+(y-p.y)*(y-p.y);
+    if (d < bd){ bd=d; best=si; } }
+  return best;
+}
+const birds = [];
+function updateParts(t, dt, wind){
+  birds.length = 0;
+  for (const p of parts) if (p.st==='bird' || p.st==='home') birds.push(p);
+  const roostX = rootX + Math.sin(t*0.11)*W*0.3, roostY = crownY - H*0.1 + Math.sin(t*0.17)*H*0.15;
+  const maxV = small ? 120 : 160, minV = small ? 60 : 75;
+  const cap = parts.length*0.32;
+
+  for (let idx=0; idx<parts.length; idx++){
+    const p = parts[idx];
+    if (p.st === 'leaf'){
+      const [x,y,a,g] = slotPos(slots[p.slot]);
+      p.x=x; p.y=y; p.ang = a + Math.sin(t*2.3+p.fp)*0.14*wind; p.head=p.ang; p.g=g;
+      if (p.m > 0){ p.m = Math.max(0, p.m - dt*1.5); }
+      else if (!RM && g > 0.97 && airborne < cap){
+        let pr = Math.max(0, wind-0.7)*0.05*dt;
+        const dx=x-mx, dy=y-my, d2=dx*dx+dy*dy;
+        if (d2 < 150*150) pr += mouseGust*2.5*(1-Math.sqrt(d2)/150)*dt;
+        if (Math.random() < pr) release(p, wind);
+      }
+    }
+    else if (p.st === 'fall'){
+      p.vy += 260*dt; p.vx += wind*70*dt; p.vx *= (1-0.6*dt);
+      p.ang += p.spin*dt; p.head = p.ang;
+      p.x += p.vx*dt; p.y += p.vy*dt; p.timer -= dt;
+      if (p.timer <= 0 || p.y > H*0.92){
+        p.st='bird'; p.timer = 9 + Math.random()*16; p.glide = 0; p.wa = 0;
+        const dir = Math.random()<.5 ? -1 : 1;
+        p.vx = dir*80 + wind*40; p.vy = -70; p.head = Math.atan2(p.vy,p.vx);
+      }
+    }
+    else { // bird / home
+      p.m = Math.min(1, p.m + dt*2.2);
+      let ax=0, ay=0;
+      // boids
+      let sx=0,sy=0, alx=0,aly=0, cx=0,cy=0, n=0;
+      for (const q of birds){ if (q===p) continue;
+        const dx=q.x-p.x, dy=q.y-p.y, d2=dx*dx+dy*dy;
+        if (d2 > 80*80) continue;
+        const d = Math.sqrt(d2)+0.01;
+        if (d < 24){ sx -= dx/d*(24-d); sy -= dy/d*(24-d); }
+        alx += q.vx; aly += q.vy; cx += dx; cy += dy; n++;
+      }
+      if (n){ ax += sx*9; ay += sy*9; ax += (alx/n - p.vx)*0.9; ay += (aly/n - p.vy)*0.9; ax += cx/n*0.5; ay += cy/n*0.5; }
+      // wander
+      p.wa += (Math.random()-.5)*5*dt; p.wa *= 0.98;
+      const hd = Math.atan2(p.vy,p.vx) + p.wa;
+      ax += Math.cos(hd)*45; ay += Math.sin(hd)*45;
+      // bounds + wind
+      const mX=70, mY=70;
+      if (p.x < mX) ax += (mX-p.x)*9; if (p.x > W-mX) ax -= (p.x-(W-mX))*9;
+      if (p.y < mY) ay += (mY-p.y)*9; if (p.y > H*0.86) ay -= (p.y-H*0.86)*12;
+      ax += (wind-0.5)*22;
+      if (p.st === 'bird'){
+        ax += clamp((roostX-p.x)*0.6, -140, 140); ay += clamp((roostY-p.y)*0.7, -140, 140);
+        p.timer -= dt;
+        if (p.timer <= 0){ const si = freeSlot(p); if (si >= 0){ p.st='home'; p.tgt=si; slots[si].owner=-2; p.timer=10; } else p.timer = 3; }
+      } else {
+        const sl = slots[p.tgt]; const [tx,ty] = slotPos(sl);
+        const dx=tx-p.x, dy=ty-p.y, d=Math.hypot(dx,dy)+0.01;
+        const want = Math.min(maxV, d*2.2);
+        ax += (dx/d*want - p.vx)*3.5; ay += (dy/d*want - p.vy)*3.5;
+        p.timer -= dt;
+        if (d < 6){ attach(p, idx, p.tgt); continue; }
+        if (p.timer <= 0){ slots[p.tgt].owner = -1; p.tgt=-1; p.st='bird'; p.timer = 6; }
+      }
+      p.vx += ax*dt; p.vy += ay*dt;
+      let v = Math.hypot(p.vx,p.vy); const lim = p.st==='home' ? maxV : maxV;
+      const lo = p.st==='home' ? 20 : minV;
+      if (v > lim){ p.vx *= lim/v; p.vy *= lim/v; } else if (v < lo && v > 0){ p.vx *= lo/v; p.vy *= lo/v; }
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      p.head = Math.atan2(p.vy, p.vx);
+      // flap / glide
+      if (p.glide > 0){ p.glide -= dt; } else { p.fp += p.ff*dt; if (Math.random() < 0.25*dt) p.glide = 0.8+Math.random()*1.5; }
+    }
+  }
+}
+function drawParts(){
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#fff'; ctx.lineCap = 'round';
+  for (const p of parts){
+    const m = p.m;
+    const bud = p.st==='leaf' ? clamp((p.g-0.82)/0.18, 0, 1) : 1;
+    if (bud <= 0) continue;
+    ctx.save(); ctx.translate(p.x, p.y);
+    if (m < 0.999){
+      ctx.save(); ctx.rotate(p.ang); ctx.globalAlpha = (1-m)*bud;
+      const sz = p.size*bud;
+      ctx.font = 'italic ' + sz.toFixed(1) + 'px "Times New Roman",Times,serif';
+      ctx.fillText(p.ch, 1, sz*0.36);
+      ctx.restore();
+    }
+    if (m > 0.001){
+      const S = p.size*1.2;
+      const f = p.glide > 0 ? 0.85 : 0.5+0.5*Math.cos(p.fp);
+      const ext = 0.45 + 0.55*f;
+      const bx = -S*0.18 - S*0.35*(1-f), by = S*ext;
+      const ex = lerp(S*0.9, bx, m), ey = lerp(S*0.14, by, m);
+      const cxp = lerp(S*0.45, S*0.15, m), cyp = lerp(S*0.34, by*0.45, m);
+      ctx.rotate(p.head); ctx.globalAlpha = m;
+      ctx.lineWidth = lerp(2.2, 1.15 + S*0.045, m);
+      ctx.beginPath();
+      ctx.moveTo(0,0); ctx.quadraticCurveTo(cxp, cyp, ex, ey);
+      ctx.moveTo(0,0); ctx.quadraticCurveTo(cxp, -cyp, ex, -ey);
+      ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0,0, S*0.26*m, S*0.09*m, 0, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* scroll → page */
+const hallway = document.getElementById('hallway'), dark = document.getElementById('dark'), box = document.getElementById('box');
+const fn5 = document.getElementById('fn5'), fn6 = document.getElementById('fn6'), fn7 = document.getElementById('fn7');
+const meas = document.getElementById('meas'), endEl = document.getElementById('end');
+const mo = document.getElementById('mo'), mi = document.getElementById('mi'), mw = document.getElementById('mw');
+let dpNow = 0, frameN = 0;
+let lastVars = '';
+function scrollUpdate(){
+  const vh = innerHeight;
+  const hr = hallway.getBoundingClientRect();
+  const hp = clamp(-hr.top / (hr.height - vh), 0, 1);
+  const dr = dark.getBoundingClientRect();
+  const dp = clamp(-dr.top / (dr.height - vh), 0, 1);
+  const br = box.getBoundingClientRect();
+  const bv = clamp(1 - Math.abs(br.top)/vh, 0, 1);
+  shiftT = small ? 0 : -W*0.24*smooth(0.05, 0.6, bv);
+  const darkV = smooth(0.34, 0.72, hp);
+  const hw = lerp(608, 44, smooth(0.04, 0.86, hp));
+  const hs = 1 - smooth(0.9, 1, hp);
+  const key = [darkV.toFixed(3), hw.toFixed(0), hp.toFixed(3), hs.toFixed(3), dp.toFixed(3)].join('|');
+  if (key === lastVars) return; lastVars = key;
+  root.style.setProperty('--dark', darkV.toFixed(3));
+  root.style.setProperty('--hw', hw.toFixed(0)+'px');
+  root.style.setProperty('--hp', hp.toFixed(3));
+  root.style.setProperty('--hs', hs.toFixed(3));
+  fn5.style.opacity = bell(0.12, 0.46, hp).toFixed(2);
+  fn6.style.opacity = bell(0.34, 0.68, hp).toFixed(2);
+  fn7.style.opacity = bell(0.5, 0.9, hp).toFixed(2);
+  meas.style.opacity = (0.85*smooth(0.08, 0.3, dp)).toFixed(2);
+  endEl.style.opacity = smooth(0.55, 0.85, dp).toFixed(2);
+  dpNow = dp;
+}
+
+/* loop */
+let last = performance.now(), t = 0;
+function frame(now){
+  let dt = (now-last)/1000; last = now; dt = Math.min(dt, 0.05); t += dt;
+  const wind = RM ? 0.3 : windAt(t, dt);
+  root.style.setProperty('--wind', wind.toFixed(3));
+  updateTree(t, wind, dt);
+  updateParts(t, dt, wind);
+  ctx.clearRect(0,0,W,H);
+  drawTree();
+  drawParts();
+  scrollUpdate();
+  if (dpNow > 0.05 && (++frameN % 6) === 0){ mo.textContent = parts.length - airborne; mi.textContent = airborne; mw.textContent = wind.toFixed(2); }
+  if (!grownOnce && t > 9) grownOnce = true;
+  requestAnimationFrame(frame);
+}
+
+let rzT = 0;
+addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { resize(); buildTree(t); }, 180); });
+document.addEventListener('visibilitychange', () => { document.title = document.hidden ? 'the birds are still here.' : 'cprkrn'; if (!document.hidden) last = performance.now(); });
+
+resize(); buildTree(0);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
